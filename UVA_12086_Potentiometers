@@ -1,0 +1,124 @@
+#include <iostream>
+#include <stdio.h>
+#include <vector>
+#include <queue>
+#include <string>
+#include <string.h>
+#include <stdlib.h>
+#include <map>
+#include <functional>
+#include <stack>
+#include <math.h>
+#include <iterator>
+
+using namespace std;
+
+int N;
+int R[200100];
+int tree[800800];
+
+void build_SegmentTree(int nowNode, int rangeStart, int rangeEnd)
+{
+    if(rangeStart == rangeEnd)
+    {
+        tree[nowNode] = R[rangeStart]; //Sometimes we need the index not the value (tree[nowNode] = rangeStart);
+        return; //Don't Forget Return :D
+    }
+
+    int rangeMid = (rangeStart + rangeEnd) / 2;
+    build_SegmentTree(nowNode*2   , rangeStart , rangeMid); // Left Child
+    build_SegmentTree(nowNode*2+1 , rangeMid+1 , rangeEnd); // Right Child
+
+    // We make any computations we need to store (minimum, maximum, sum, .....) between (tree[nowNode*2] + tree[nowNode*2+1])
+    tree[nowNode] = tree[nowNode*2] + tree[nowNode*2+1];
+}
+
+int get(int nowNode, int rangeStart, int rangeEnd, int S, int E)
+{
+    if(S > E || rangeStart > rangeEnd || S > rangeEnd || E < rangeStart) // The range is outside the interval we want to search in
+    {
+        return 0; // Any Sentinel Value
+    }
+
+    if(rangeStart >= S && rangeEnd <= E) // The range is completely inside the interval we want to search in
+    {
+        return tree[nowNode];
+    }
+
+    int rangeMid = (rangeStart+rangeEnd)/2;
+    int leftReturn  = get(nowNode*2    , rangeStart  , rangeMid, S, E);
+    int rightReturn = get(nowNode*2+1  , rangeMid+1  , rangeEnd, S, E);
+
+    return (leftReturn + rightReturn);
+}
+
+int update(int nowNode, int rangeStart, int rangeEnd, int index, int newValue, int oldValue)
+{
+    if(index < rangeStart || index > rangeEnd)
+    {
+        return tree[nowNode];
+    }
+
+    if(rangeStart == index && rangeEnd == index)
+    {
+        tree[nowNode] = newValue;
+        return tree[nowNode]; // the new value of this node
+    }
+
+    int rangeMid = (rangeStart+rangeEnd)/2;
+    int leftReturn  = update(nowNode*2   , rangeStart  , rangeMid, index, newValue, oldValue);
+    int rightReturn = update(nowNode*2+1 , rangeMid+1  , rangeEnd, index, newValue, oldValue);
+
+    tree[nowNode] = (leftReturn + rightReturn);
+    return (leftReturn + rightReturn);
+}
+
+int main()
+{
+    string str;
+    int testN = 1;
+    bool firstTest = true;
+
+    scanf("%d",&N);
+    while(N != 0)
+    {
+        if(firstTest == true)
+        {
+            firstTest = false;
+        }
+        else
+        {
+            printf("\n");
+        }
+        printf("Case %d:\n", testN);
+        for(int i=1; i<=N; i++)
+        {
+            scanf("%d",&R[i]);
+        }
+
+        build_SegmentTree(1, 1, N);
+
+        cin >> str;
+        int first, second;
+        while(str != "END")
+        {
+            if(str == "S") // update R
+            {
+                scanf("%d %d",&first,&second);
+                update(1, 1, N, first, second, R[first]);
+            }
+            else if(str == "M") // measure total R
+            {
+                scanf("%d %d",&first,&second);
+                int res = get(1, 1, N, first, second);
+                printf("%lld\n", res);
+            }
+
+            cin >> str;
+        }
+
+        scanf("%d",&N);
+        testN++;
+    }
+    return 0;
+}
