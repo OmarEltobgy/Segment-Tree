@@ -52,25 +52,24 @@ int get(int nowNode, int rangeStart, int rangeEnd, int S, int E)
     return (leftReturn + rightReturn);
 }
 
-int update(int nowNode, int rangeStart, int rangeEnd, int index, int newValue, int oldValue)
+void update(int nowNode, int rangeStart, int rangeEnd, int index, int newValue)
 {
     if(index < rangeStart || index > rangeEnd)
     {
-        return tree[nowNode];
+        return; //Don't Forget Return :D
     }
 
     if(rangeStart == index && rangeEnd == index)
     {
         tree[nowNode] = newValue;
-        return tree[nowNode]; // the new value of this node
+        return; //Don't Forget Return :D
     }
 
     int rangeMid = (rangeStart+rangeEnd)/2;
-    int leftReturn  = update(nowNode*2   , rangeStart  , rangeMid, index, newValue, oldValue);
-    int rightReturn = update(nowNode*2+1 , rangeMid+1  , rangeEnd, index, newValue, oldValue);
+    update(nowNode*2   , rangeStart  , rangeMid, index, newValue);
+    update(nowNode*2+1 , rangeMid+1  , rangeEnd, index, newValue);
 
-    tree[nowNode] = (leftReturn + rightReturn);
-    return (leftReturn + rightReturn);
+    tree[nowNode] = tree[nowNode*2] + tree[nowNode*2+1];
 }
 
 int main()
@@ -105,13 +104,13 @@ int main()
             if(str == "S") // update R
             {
                 scanf("%d %d",&first,&second);
-                update(1, 1, N, first, second, R[first]);
+                update(1, 1, N, first, second);
             }
             else if(str == "M") // measure total R
             {
                 scanf("%d %d",&first,&second);
                 int res = get(1, 1, N, first, second);
-                printf("%lld\n", res);
+                printf("%d\n", res);
             }
 
             cin >> str;
