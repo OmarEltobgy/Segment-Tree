@@ -1,0 +1,160 @@
+#include <iostream>
+#include <stdio.h>
+#include <vector>
+#include <queue>
+#include <string>
+#include <string.h>
+#include <stdlib.h>
+#include <map>
+#include <functional>
+#include <stack>
+#include <math.h>
+#include <iterator>
+
+using namespace std;
+
+int N, queriesN;
+int values[100100];
+int frequencies[100100];
+int start[100100];
+int endd[100100];
+int tree[400400];
+
+void build_SegmentTree(int nowNode, int rangeStart, int rangeEnd)
+{
+    if(rangeStart == rangeEnd)
+    {
+        tree[nowNode] = frequencies[rangeStart];
+        return;
+    }
+
+    int rangeMid = (rangeStart+rangeEnd)/2;
+    build_SegmentTree(nowNode*2    , rangeStart  , rangeMid);
+    build_SegmentTree(nowNode*2+1  , rangeMid+1  , rangeEnd);
+
+    tree[nowNode] = max(tree[nowNode*2], tree[nowNode*2+1]);
+}
+
+int get(int nowNode, int rangeStart, int rangeEnd, int S, int E)
+{
+    if(S > E || S > rangeEnd || E < rangeStart) // the range is outside the interval we search in
+    {
+        return -1; // any sentinel value
+    }
+
+    if(rangeStart >= S && rangeEnd <= E) // the range is completely inside the interval we search in
+    {
+        return tree[nowNode];
+    }
+
+    int rangeMid = (rangeStart+rangeEnd)/2;
+    int leftReturn  = get(nowNode*2    , rangeStart  , rangeMid, S, E);
+    int rightReturn = get(nowNode*2+1  , rangeMid+1  , rangeEnd, S, E);
+
+    if(leftReturn == -1)
+    {
+        return rightReturn;
+    }
+    else if(rightReturn == -1)
+    {
+        return leftReturn;
+    }
+    else
+    {
+        return max(leftReturn, rightReturn);
+    }
+}
+
+int main()
+{
+    scanf("%d",&N);
+    while(N != 0)
+    {
+        scanf("%d",&queriesN);
+
+        scanf("%d",&values[1]);
+        int counter = 1;
+        int S=1, E;
+        for(int i=2; i<=N; i++)
+        {
+            scanf("%d",&values[i]);
+            if(values[i] == values[i-1])
+            {
+                counter ++;
+            }
+            else
+            {
+                E = i-1;
+                for(int j=S; j<=E; j++)
+                {
+                    frequencies[j] = counter;
+                    start[j] = S;
+                    endd[j] = E;
+                }
+                counter = 1;
+                S = i;
+            }
+        }
+        //for the last elements
+        E = N;
+        for(int j=S; j<=E; j++)
+        {
+            frequencies[j] = counter;
+            start[j] = S;
+            endd[j] = E;
+        }
+
+        /*for(int i=1; i<=N; i++)
+        {
+            cout << i << " " << values[i] << " " << frequencies[i] << " " << start[i] << " " << endd[i] << endl;
+        }*/
+
+        build_SegmentTree(1, 1, N);
+
+        int startToSend, endToSend, res;
+        for(int i=0; i<queriesN; i++)
+        {
+            scanf("%d %d",&S,&E);
+
+            if(start[S] == start[E])
+            {
+                startToSend = S;
+                endToSend = E;
+                res = endToSend - startToSend + 1;
+            }
+            else
+            {
+                if(start[S] != S)
+                {
+                    startToSend = endd[S] + 1;
+                }
+                else
+                {
+                    startToSend = S;
+                }
+
+                if(endd[E] != E)
+                {
+                    endToSend = start[E] - 1;
+                }
+                else
+                {
+                    endToSend = E;
+                }
+                int firstFrequency = startToSend - S;
+                int secondFrequency = E - endToSend;
+
+                res = get(1, 1, N, startToSend, endToSend);
+
+                res = max(res, firstFrequency);
+                res = max(res, secondFrequency);
+            }
+
+            printf("%d\n", res);
+        }
+
+        scanf("%d",&N);
+    }
+
+    return 0;
+}
